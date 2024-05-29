@@ -17,6 +17,14 @@ init_package_deps() {
     done <<< "$(awk -F: '/"package"/ || /"subscriberPackageVersionId"/ {gsub(/ /, "", $2); gsub(/"/, "", $2); print $2}' sfdx-project.json | tr ',' '\n')"
 }
 
+# init based on all files contained in the ./scripts/apex/ directory
+init_apex_scripts() {
+    apexScriptPaths=()
+    for script in ./scripts/apex/*.apex; do
+        apexScriptPaths+=("$script")
+    done
+}
+
 # Defaults
 init() {
     root=$(pwd)
@@ -32,7 +40,7 @@ init() {
     fi
 
     init_package_deps
-    apexScriptPaths=()
+    init_apex_scripts
 }
 
 print_config() {
