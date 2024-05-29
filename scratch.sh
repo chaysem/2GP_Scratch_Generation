@@ -32,6 +32,7 @@ init() {
     fi
 
     init_package_deps
+    apexScriptPaths=()
 }
 
 print_config() {
@@ -53,7 +54,14 @@ print_config() {
         printf "|\t\t\t\t\t\t\t\t | ($index) $package\n"
         index=$((index + 1))
     done
-
+    printf "|\t\t\t\t\t\t\t\t |\n"
+    printf "| (8) Post Deployment Apex Scripts:\t\t\t\t | \n"
+    printf "|\t\t\t\t\t\t\t\t |\n"
+    index=1
+    for script in "${apexScriptPaths[@]}"; do
+        printf "|\t\t\t\t\t\t\t\t | ($index) $script\n"
+        index=$((index + 1))
+    done
     printf "|\t\t\t\t\t\t\t\t |\n"
     printf "| (C) Create Scratch Org\t\t\t\t\t |\n"
     printf "______________________________________________________________________________________________________________________________\n\n"
@@ -184,6 +192,41 @@ manage_packages() {
     done
 }
 
+
+post_deployment_scripts() {
+    while true; do
+        print_config
+        read -p "Enter your choice (C)lear, (A)dd, (R)emove, (B)ack: " choice
+        case $choice in
+            [Cc]* )
+                apexScriptPaths=()
+                echo "All scripts have been cleared."
+                ;;
+            [Aa]* )
+                read -p "Enter the path to the apex script to add: " script
+                apexScriptPaths+=("$script")
+                echo "Apex script $script has been added."
+                ;;
+            [Rr]* )
+                read -p "Enter the index of the apex script to remove: " index
+                if [[ $index -ge 1 ]] && [[ $index -le ${#apexScriptPaths[@]} ]]; then
+                    script_removed=${apexScriptPaths[$index-1]}
+                    apexScriptPaths=("${apexScriptPaths[@]:0:$((index-1))}" "${apexScriptPaths[@]:$index}")
+                    echo "Apex script $script_removed has been removed."
+                else
+                    echo "Invalid index. No script removed."
+                fi
+                ;;
+            [Bb]* )
+                break
+                ;;
+            * )
+                echo "Please enter C, A, R, or B."
+                ;;
+        esac
+    done
+}
+
 create_scratch_org() {
     read -p "Are you sure you want to proceed? (y/n) " -n 1 -r
     echo    # (optional) move to a new line
@@ -215,6 +258,15 @@ create_scratch_org() {
     # Deploy source
     if [[ "$deploySource" == "Y" ]]; then
         sf project deploy start -w99
+    fi
+
+    # TODO: Permission Sets
+
+    # Run any post deployment scripts
+    if [ ${#apexScriptPaths[@]} -ne 0 ]; then
+        for script in ${apexScriptPaths[@]}; do
+            sf apex run --file $script
+        done
     fi
 }
 
@@ -252,6 +304,9 @@ while true; do
         7)
             print_config
             manage_packages
+            ;;
+        8)
+            post_deployment_scripts
             ;;
         C|c)
             print_config
