@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# TODO: Add a scratch script init file where the project can provide defaults for the scratch script.
+# TODO: Add a permission set assigment feature -- https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_assign_permset.htm
+# TODO: Add a trace flag init feature -- https://salesforce.stackexchange.com/questions/346211/is-there-a-way-to-create-trace-flags-for-certain-user-using-sfdx
+
 # Dependencies (init)
 init_package_deps() {
     packages=()
@@ -20,6 +24,13 @@ init_package_deps() {
 # init based on all files contained in the ./scripts/apex/ directory
 init_apex_scripts() {
     apexScriptPaths=()
+
+    # Check if the scripts folder exists
+    if [ ! -d "./scripts/apex" ]; then
+        return
+    fi
+
+    # Loop through all the scripts in the ./scripts/apex/ directory
     for script in ./scripts/apex/*.apex; do
         apexScriptPaths+=("$script")
     done
